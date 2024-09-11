@@ -402,7 +402,7 @@ with open('movie.json', 'w', encoding='utf-8') as f:
 
 * `url`获取
 
-  ![image-20240831201234156](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240831201234156.png)
+  ![image-20240831201234156](https://github.com/Yan-huimin/Image/blob/main/image-20240831201234156.png)
 
 按照上面步骤即可获取`URL`.
 
@@ -450,7 +450,7 @@ if __name__ == '__main__':
 
 在这里以Acwing的题库页面为例：
 
-![image-20240831232834675](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240831232834675.png)
+![image-20240831232834675](https://github.com/Yan-huimin/Image/blob/main/image-20240831232834675.png)
 
 按照上面的步骤即可获取到我们所需要的信息。
 
@@ -500,9 +500,9 @@ except Exception as e:
 
 <font color = green>**Result : **</font>
 
-![image-20240831233614201](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240831233614201.png)
+![image-20240831233614201](https://github.com/Yan-huimin/Image/blob/main/image-20240831233614201.png)
 
-![image-20240831233632721](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240831233632721.png)
+![image-20240831233632721](https://github.com/Yan-huimin/Image/blob/main/image-20240831233632721.png)
 
 <font color = green>Tips : </font>
 
