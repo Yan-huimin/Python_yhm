@@ -209,7 +209,7 @@ print(content)
 
 但是，当我们将`url`改变为`https://www.baidu.com`，这时我们将会发现上面的代码不再能够正常爬取网站的源码，这是因为网站进行了一个很简单的反爬，此时网站察觉到我们在通过一种不合法的手段获取网站的源码，这是我们就需要对自己进行伪装，通过另一种方式进行网页源代码的获取。
 
-![image-20240831134040390](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831134040390.png)
+![image-20240831134040390](https://github.com/Yan-huimin/Image/blob/main/image-20240831134040390.png)
 
 按照上面的操作，我们获取正常访问网页的ua,然后将自己伪装为正常ua,这样就可以正常爬取网页的源码了。
 
@@ -402,7 +402,7 @@ with open('movie.json', 'w', encoding='utf-8') as f:
 
 * `url`获取
 
-  ![image-20240831201234156](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831201234156.png)
+  ![image-20240831201234156](https://github.com/Yan-huimin/Image/blob/main/image-20240831201234156.png)
 
 按照上面步骤即可获取`URL`.
 
@@ -450,7 +450,7 @@ if __name__ == '__main__':
 
 在这里以Acwing的题库页面为例：
 
-![image-20240831232834675](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831232834675.png)
+![image-20240831232834675](https://github.com/Yan-huimin/Image/blob/main/image-20240831232834675.png)
 
 按照上面的步骤即可获取到我们所需要的信息。
 
