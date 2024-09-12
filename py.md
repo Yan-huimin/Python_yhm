@@ -211,6 +211,8 @@ print(content)
 
 ![image-20240831134040390](https://github.com/Yan-huimin/Image/blob/main/image-20240831134040390.png)
 
+![图片](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831134040390.png)
+
 按照上面的操作，我们获取正常访问网页的ua,然后将自己伪装为正常ua,这样就可以正常爬取网页的源码了。
 
 <font color = red>**Code : **</font>
@@ -402,6 +404,8 @@ with open('movie.json', 'w', encoding='utf-8') as f:
 
 * `url`获取
 
+  ![image-20240831201234156](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831201234156.png)
+  
   ![image-20240831201234156](https://github.com/Yan-huimin/Image/blob/main/image-20240831201234156.png)
 
 按照上面步骤即可获取`URL`.
@@ -450,7 +454,9 @@ if __name__ == '__main__':
 
 在这里以Acwing的题库页面为例：
 
-![image-20240831232834675](https://github.com/Yan-huimin/Image/blob/main/image-20240831232834675.png)
+![image-20240831232834675](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831232834675.png)
+
+![图片_03](https://github.com/Yan-huimin/Image/blob/main/image-20240831232834675.png)
 
 按照上面的步骤即可获取到我们所需要的信息。
 
@@ -500,9 +506,13 @@ except Exception as e:
 
 <font color = green>**Result : **</font>
 
-![image-20240831233614201](https://github.com/Yan-huimin/Image/blob/main/image-20240831233614201.png)
+![image-20240831233614201](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831233614201.png)
 
-![image-20240831233632721](https://github.com/Yan-huimin/Image/blob/main/image-20240831233632721.png)
+![图片_04](https://github.com/Yan-huimin/Image/blob/main/image-20240831233614201.png)
+
+![image-20240831233632721](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831233632721.png)
+
+![图片_05](https://github.com/Yan-huimin/Image/blob/main/image-20240831233632721.png)
 
 <font color = green>Tips : </font>
 
@@ -757,7 +767,9 @@ print(content)
 
 当我们运行上面的py代码，会发现出现下面的报错信息：
 
-![xpath_01](https://github.com/Yan-huimin/Image/blob/main/xpath_01.png)
+![xpath_01](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240912124047408.png)
+
+![图片_06](https://github.com/Yan-huimin/Image/blob/main/xpath_01.png)
 
 :smirk:但是这个错误并不需要担心，这个错误是因为`xpath`严格遵守html的规范，但是我们写的html文件中，有一条语句并没有严格按照html的规范进行书写，下面介绍如何进行更改：
 
@@ -811,7 +823,9 @@ print(len(my_list))》
 
 :clipboard:<font color = green>*Tips:关于`xpath helper`的使用方式*</font>
 
-> ![xPath_02](https://github.com/Yan-huimin/Image/blob/main/xpath_02.png)
+> ![xPath_02](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240912142048711.png)
+>
+> ![图片_07](https://github.com/Yan-huimin/Image/blob/main/xpath_02.png)
 
 :pencil2:<font color = yellow>*`xpath helper`的快捷键可以在扩展管理中进行设置，一般设置为`Ctrl + Shift + X`*</font>
 
@@ -946,7 +960,9 @@ if __name__ == '__main__':
 >
 >首先我们需要使用`etree`去解析获取到的源码`content`.因为上面学的是`xpath`，所以在这里我们就使用`xpath`进行网页源码的解析操作，这一步骤需要在你的浏览器上安装`xpath hepler`这个插件，同时需要在你的`pycharm`或者`vscode`上安装`lxml`这个包。
 >
->![xpath_03](https://github.com/Yan-huimin/Image/blob/main/xpath_03.png)
+>![xpath_03](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240912201935337.png)
+>
+>![图片_03](https://github.com/Yan-huimin/Image/blob/main/xpath_03.png)
 >
 >在上面的图片中我使用的是过滤解析源码中的`src`数据，可以看到左侧已经册成功显示出解析出来的源码。
 >
