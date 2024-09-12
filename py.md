@@ -500,9 +500,9 @@ except Exception as e:
 
 <font color = green>**Result : **</font>
 
-![image-20240831233614201](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831233614201.png)
+![image-20240831233614201](https://github.com/Yan-huimin/Image/blob/main/image-20240831233614201.png)
 
-![image-20240831233632721](C:\Users\Y_hm\Desktop\My_Note\Python_Pa\Image\image-20240831233632721.png)
+![image-20240831233632721](https://github.com/Yan-huimin/Image/blob/main/image-20240831233632721.png)
 
 <font color = green>Tips : </font>
 
