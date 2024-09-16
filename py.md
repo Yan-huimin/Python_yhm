@@ -962,7 +962,7 @@ if __name__ == '__main__':
 >
 >![xpath_03](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240912201935337.png)
 >
->![图片_03](https://github.com/Yan-huimin/Image/blob/main/xpath_03.png)
+>![图片_08](https://github.com/Yan-huimin/Image/blob/main/xpath_03.png)
 >
 >在上面的图片中我使用的是过滤解析源码中的`src`数据，可以看到左侧已经册成功显示出解析出来的源码。
 >
@@ -1007,6 +1007,752 @@ urllib.error.urlerror: <urlopen error [winerror 10054] 远程主机强迫关闭�
 ```
 
 因此，在这里为了避免程序因为这种情况直接退出，我们在每次捕捉到异常的时候重新调用这个函数，直至图片成功下载位置，在这里我尝试限定最大递归次数来避免程序的崩溃，但是后面发现是我多虑了，即使不设置最大递归次数限制，我们在递归两次最有即可成功下载图片，但是当我们在设置递归次数限制后反而又会出现上面的错误，因此在这里我并没有设置，这个问题有待进一步的思考。:expressionless:
+
+# <font color = orange>jsonpath</font>
+
+<font color = green>*Tips:*</font> 因为`jsonpath`的语法与`xpath`类似，所以在这里我就没有在进行总结了，需要的话可以去网上找。
+
+:telescope:[贴一个链接](https://blog.csdn.net/mouday/article/details/107928131)
+
+这里我使用一个案例来介绍`jsonpath`如何使用。
+
+<font color = red>**`Jsonpath`解析淘票票网页的地名**</font>
+
+![json_01](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240914195826351.png)
+
+![json_02](https://github.com/Yan-huimin/Image/blob/main/json_01.png)
+
+我们通过捕捉点击那个黑三角获取到的`json`数据进行爬取。
+
+![json_02](C:\Users\Y_hm\AppData\Roaming\Typora\typora-user-images\image-20240914200223128.png)
+
+![json_02](https://github.com/Yan-huimin/Image/blob/main/json_02.png)
+
+但是当我们使用浏览器访问这个地址会发现：
+
+```json
+jsonp109({"returnCode":"0","returnValue":{}});
+```
+
+这是因为他进行了一些反爬操作。
+
+下面是代码：
+
+<font color = red>**Code**</font>
+
+```python
+import jsonpath
+import json
+import urllib.request
+import urllib.parse
+
+url = 'https://www.taopiaopiao.com/cityAction.json?activityId&_ksTS=1726311329458_108&jsoncallback=jsonp109&action=cityAction&n_s=new&event_submit_doGetAllRegion=true'
+
+headers = {
+    'cookie': 'cna=jllsH8s8CD4CAd0NzkTay1bO; xlly_s=1; isg=BOHh3pK1I1WEE48h2OjK8Jgp8K37jlWASMdN2EO2sOhHqgF8i9-FUEHkDNYsZ-24',
+    'referer': 'https://www.taopiaopiao.com/?tbpm=3',
+}
+
+request = urllib.request.Request(url=url, headers=headers)
+
+response = urllib.request.urlopen(request)
+
+def rm_start(content):
+    ss = ''
+    is_find_l = 0
+    if_find_r = 0
+    for s in content:
+        if s == '(':
+            is_find_l = 1
+            continue
+        if is_find_l == 1 and s != ')':
+            ss = ss + s
+        if s == ')':
+            break
+    return ss
+
+data = rm_start(response.read().decode('utf-8'))
+
+with open('data.json', 'w', encoding='utf-8') as f:
+    f.write(data)
+
+#<font color = green>*Tips:*</font> 注意，jsonpath只能解析本地文件，因此应该先将读取到的json数据保存到本地，在使用json解析数据
+
+city = json.load(open('data.json', encoding = 'utf-8'))
+
+city_list = jsonpath.jsonpath(city, '$..regionName')
+
+with open('city.txt', 'w', encoding='utf-8') as f:
+    n = 1
+    for city in city_list:
+        f.write(city + '\t')
+        if n % 8 == 0:
+            f.write('\n')
+        n += 1
+```
+
+我们在headers中添加cookie和referer即可破解。
+
+我们打印我们获取到的json数据会发现是这样子的：
+
+```json
+jsonp109({"returnCode":"0","returnValue":{"A":[{"id":3643,"parentId":0,"regionName":"阿坝","cityCode":513200,"pinYin":"ABA"},{"id":3090,"parentId":0,"regionName":"阿克义","cityCode":520300,"pinYin":"ZUNYI"}]}});
+
+```
+
+因为中间的内容太多了，所以在这里我就把中间的大部分内容给删除了，这里只是展示了开头和结尾的部分内容。
+
+我们会发现开头和结尾分别有一个：
+
+:star: <font color = yellow>*Start*</font>
+
+```json
+json109(
+```
+
+:star2: <font color = yellow>*End*</font>
+
+```json
+);
+```
+
+只要我们把这两个东西给他去掉我们就可以得到正确的json数据了。
+
+在上面的代码中我是用了一个`rm_start()`函数来进行这个操作，但是因为Pyhton本身就非常强大，我们同样也可以使用Python中的工具进行分割字符串：
+
+```python
+content = "json......"
+
+content = content.split('(')[1].split(')')
+```
+
+使用上面这段代码同样可以获得相同的效果，至于原因，可以看看[Python_split](https://www.runoob.com/python/att-string-split.html)。
+
+:speech_balloon: 注意，`jsonpath`只能解析本地的数据，因此我们需要将处理得到的`json`数据保存到本地，再使用`jsonpath`进行解析。
+
+这里我们需要获取的是所有的地名，就是`json`数据中的`regionName`，解析方式就是`$..regionName`，获取所有的`Name`即可。
+
+
+
+# <font color = orange>Bs4爬取高清图片</font>
+
+:revolving_hearts: 个人认为`bs4 + xpath helper`最好用的，但是前提是你得会用`xpath`，当然`xpath`也非常好用。
+
+下面是我的关于`bs4`解析`html`文件的一些代码总结，仅供参考。
+
+<font color = red>**Html Code**</font>
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+    <div>
+        <ul>
+            <li id="per">张三</li>
+            <li id="per_1">李四</li>
+            <li id="per_2">王五</li>
+            <a href="http://www.google.com" id="Google">谷歌</a>
+            <a href="", class="city">北京</a>
+            <a href="", class="city">上海</a>
+        </ul>
+        <li>test</li>
+        <a href="">百度</a>
+        <a href="">必应</a>
+        <ul>
+            <span name="red">红色</span>
+            <span name="blue">蓝色</span>
+            <span name="green">绿色</span>
+        </ul>
+    </div>
+</body>
+</html>
+```
+
+<font color = red>**Py Code**</font>
+
+```python
+from bs4 import BeautifulSoup
+
+soup = BeautifulSoup(open('bs4_test.html', encoding='utf-8'), 'lxml')
+
+# 找到的是第一个符合条件的a标签
+# print(soup.a)
+
+# attrs获取标签的属性和属性值
+# print(soup.a.attrs)
+
+# find()函数
+# 返回的是第一个符合条件的数据
+# print(soup.find('a'))
+# print(soup.find('a', class_='city'))
+
+# find_all()函数
+# 返回的是符合条件的所有数据
+# print(soup.find_all('li'))
+
+# print(soup.find_all(['a', 'span'], limit=6))
+
+
+# select()函数
+
+# 返回的是所有符合条件的标签
+# print(soup.select('a'))
+
+# 类选择器，使用.来进行class筛选
+# print(soup.select('.city'))
+
+# 类选择器，使用#来进行id的筛选
+# print(soup.select('#per_2'))
+
+# 属性选择器
+# print(soup.select('li[id]'))
+#
+# print(soup.select('li[id="per"]'))
+
+# 层级选择器 <space>表示选择后代
+# print(soup.select('div li'))
+
+# 子代选择器 a > b
+# 选择某标签的第一级子标签
+# print(soup.select('div > li'))
+# print(soup.select('div > ul > li'))
+
+#选择所有的a标签和li标签
+# print(soup.select('a, li'))
+
+# id_list = soup.select('a, li')
+# for id in id_list:
+#     print(id.string)
+
+# print(id_list[0].get_text())
+
+# 如果选定的标签下面不存在其他标签，那么string和get_text函数均可以获取到标签下面的内容
+# 但是，如果标签下面存在其他的标签，那么string函数将无法获取到标签下面的内容，但是get_text函数可以获取到。
+# 因此，一般情况建议使用get_text函数
+
+# name返回的是标签的名称(a, p, span, div, ......)
+# attrs则是将这个标签的所有属性值作为字典进行返回
+# l_list = soup.select('div > ul > span')
+# for i in l_list:
+#     print(i.name)
+#     print(i.attrs)
+#     print(i.get_text())
+
+# 因为attrs返回的是一个字典，所以可以直接是使用get函数获取某个属性的内容
+# 下面的三种方式均可以获得想要的属性内容
+# l_list = soup.select('div > ul > span')
+# for i in l_list:
+#     print(i.attrs.get('name'))
+#     print(i.get('name'))
+#     print(i['name'])
+```
+
+:speech_balloon: 一般在解析网页的时候都是使用`select()`函数。
+
+下面是使用`bs4`爬取站长素材网站的风景图片网页的所有图片的案例[风景图片](https://sc.chinaz.com/tupian/fengjingtupian.html)。
+
+:traffic_light: 上次我们使用`xpath`只是获取到了这些图片的缩略图，但是这样子是肯定不行的，缩略图拿来什么用都没有，所以这一次我们直接使用`bs4`解析获取每一张图片的高清图片。
+
+二话不说，先上代码：
+
+<font color = red>**Code:**</font>
+
+```python
+import urllib.parse
+import urllib.request
+from bs4 import BeautifulSoup
+import socket
+import time
+
+# https://sc.chinaz.com/tupian/fengjing.html
+# https://sc.chinaz.com/tupian/fengjing_2.html
+
+
+# # //div[contains(@class, "container")]//div[@class="right-div tupian-right-div"]//div/p[@class="bg-bull btn-p com-right-down-btn"]/a
+# # //div[@class="item masonry-brick"]/div/a
+# # //div[@class="container"]//div[@class="bot-div"]/a
+
+
+socket.setdefaulttimeout(20)
+
+headers = {
+    'cookie': '_clck=pstu63%7C2%7Cfp4%7C0%7C1716; Hm_lvt_398913ed58c9e7dfe9695953fb7b6799=1726122656,1726141579,1726314568; HMACCOUNT=22173AC77CF84B49; Hm_lpvt_398913ed58c9e7dfe9695953fb7b6799=1726324824',
+    'referer': 'https://sc.chinaz.com/tupian/'
+}
+
+base_url = 'https://sc.chinaz.com/tupian/fengjing'
+main_page_url_head = 'https://sc.chinaz.com/'
+cnt_img = 1
+
+
+def get_url(index):
+    g_url = base_url + '.html' if index == 1 else base_url + '_' + str(index) + '.html'
+    return g_url
+
+
+def get_request(url_1):
+    re = urllib.request.Request(url=url_1, headers=headers)
+    return re
+
+
+def enter_main_page(main_page_url, retry_count=3):
+    try:
+        main_page_content = urllib.request.urlopen(main_page_url).read().decode('utf-8')
+        main_page_soup = BeautifulSoup(main_page_content, 'lxml')
+        img_url = main_page_soup.select('p.bg-bull.btn-p.com-right-down-btn > a')
+        if img_url:
+            down_load_img(img_url[0].get('href'))
+        else:
+            print("未找到图片链接，跳过该图片。")
+    except Exception as e:
+        if retry_count > 0:
+            print(f"下载图片时发生错误: {e}，重试中... 剩余重试次数: {retry_count}")
+            time.sleep(2)  # 暂停 2 秒后重试 这里可以自定义，不一定必须是2s
+            enter_main_page(main_page_url, retry_count - 1)
+        else:
+            print(f"图片下载失败，跳过该图片。错误: {e}")
+
+
+def down_load_img(img_url_end):
+    global cnt_img
+    file_end = img_url_end[-4:]
+    if not file_end.startswith('.'):
+        file_end = '.jpg'
+    urllib.request.urlretrieve(img_url_end, 'D:\\Python_code\\pythonProject\\Img_f\\' + str(cnt_img) + file_end)
+    print('成功下载{}张图片......'.format(cnt_img))
+    cnt_img += 1
+
+    
+def get_main_page(request_url, begin):
+    """处理每一页的所有图片链接"""
+    try:
+        index = 0
+        soup = BeautifulSoup(urllib.request.urlopen(request_url).read().decode('utf-8'), 'lxml')
+        img_list = soup.select('div.container div.bot-div > a')
+        if not img_list:
+            print("该页面没有图片链接，跳过。")
+            return
+
+        for i in range(begin, len(img_list)):
+            index = i
+            enter_main_page(main_page_url_head + img_list[i].get('href'))
+        time.sleep(1)
+    except Exception as e:
+        print(f"获取页面时发生错误: {e}，重试...")
+        get_main_page(request_url, index)
+
+
+if __name__ == '__main__':
+    start_page = int(input('请输入起始页码......\n'))
+    end_page = int(input('请输入终止页码......\n'))
+    for page in range(start_page, end_page + 1):
+        url = get_url(page)
+        request = get_request(url)
+        print('*' * 15 + '{}'.format(page) + '*' * 15)
+        get_main_page(request, 0)
+    print('-' * 50)
+    print('下载成功......')
+    print('本次成功下载{}张图片......'.format(cnt_img))
+```
+
+我这里解析的是服务器数据，如果需要解析本地文件，可以使用下面代码：
+
+```python
+soup = Beautiful(open('file_path + file_name', encoding='utf-8'), 'lxml')
+```
+
+:soon: 下面就来分析上面的代码是如何进行数据解析的。
+
+首先我们需要的便是这个网站的`url`，我们可以通过浏览器的检查功能获取到每一页的`url`：
+
+```asciiarmor
+# https://sc.chinaz.com/tupian/fengjing.html
+# https://sc.chinaz.com/tupian/fengjing_2.html
+```
+
+:cherry_blossom:观察上面的`url`我们会发现她和我们上次分析的一样，第一页不需要进行操作，从第二页往后，每次都是在基础`url`的基础上增加`“_str(page)”`，这样子我们就很容易获取到这个网页每一页的`url`了。
+
+:cherry_blossom:然后便是访问每一页`url`来获取到每一张图片的真实地址，那么我们就需要进行访问对象的定制了，我们这里直接在`headers`里面放入`cookie`和`referer`就可以正常进行访问了。
+
+```python
+headers = {
+    'cookie': '_clck=pstu63%7C2%7Cfp4%7C0%7C1716; Hm_lvt_398913ed58c9e7dfe9695953fb7b6799=1726122656,1726141579,1726314568; HMACCOUNT=22173AC77CF84B49; Hm_lpvt_398913ed58c9e7dfe9695953fb7b6799=1726324824',
+    'referer': 'https://sc.chinaz.com/tupian/'
+}
+```
+
+这样我们就可以通过对象定制访问到这个网页，那么接下来我们就可以获取网页的源码了，这时，好玩儿的东向西就来了，这个网页是动态加载的，这意味着我们在线访问到的网页的源码与我们爬取下来的网页源码是存在差别的，而这样的差别也会导致我们在进行网页数据解析的时候出现问题。
+
+一开始在在线网页进行解析，对应数据的`xpath`语句应该是
+
+```python
+//div[@class="item masonry-brick"]/div/a
+```
+
+但是如果按照这样的`xpath`语句，那么你将无法访问到真实的网页，甚至你无法获取到他的网页`url`，这时应该怎么办呢?
+
+因为我目前还没有学习对于动态网页的源码爬取，这时我想到了一种方法，我们先将源码给爬取下来保存到本地的`html`文件中，然后我们运行此程序，根据运行获得的网页再次进行`xpath`解析，这样子我们就可以正常获取到我们想要的内容了。
+
+```python
+//div[@class="container"]//div[@class="bot-div"]/a
+```
+
+这是我根据爬取到的源码再次进行数据解析获取的`xpath`语句，我们发现这两个`xpath`语句存在很大差异，因此在网页源码爬取的时候应该没写一个小的功能函数，然后输出一下看看这个函数的功能是否和我们预期的一样。
+
+获取到源码后我们需要获取那个高清图片页面的`url`，上次我们获取到的只是缩略图的`src`地址，但是这次我们的目标是所有的高清图片，肯定不能只是满足于`src`。
+
+我想到了一种方法，我们从则会个页面的源码中解析出每一个下载高清图片的页面的`url`，然后我们再通过模拟浏览器访问这个页面爬取到这个下载页面的源码，我们再根据下载页面源码解析出高清图片下载的真实地址。
+
+​															<font color = pink>*理论成功，那么我们就开始实践！*</font>
+
+这时我们需要注意与上面相同的问题，我们爬取到的源码与在线页面的源码存在差异，因此我们应该根据源码适当调整我们的`xpath`语句。
+
+在获取到图片的下载链接之后我们便可以着手进行图片的下载了，图片下载已经再熟悉不过了，直接使用`urlretrieve()`函数就可以了。
+
+这里是`bs4`的练习，那么我们就需要根据`xpath`语句，将其翻译为`bs4`语句就OK了。
+
+经过上面的操作步骤，我们就可以成功获取到页面的<font color = red>**某些**</font>高清图片了。
+
+:question: 为什么是某些呢？
+
+这里就涉及到一些异常处理的问题了，首先解释一下下面这段代码的作用：
+
+```python
+import socket
+
+socket.setdefaulttimeout(20)
+```
+
+:triangular_ruler:这行代码的主要作用是**为全局的网络操作设置一个默认的超时时间**。在这个例子中，它将超时时间设定为 20 秒。这意味着通过 `urllib` 或其他库进行的所有网络连接（如 HTTP 请求）将等待最多 20 秒来尝试与目标服务器建立连接或接收数据。如果超过 20 秒没有成功连接或接收到数据，连接将被视为超时，并抛出一个 `socket.timeout` 异常。
+
+<font color = green>*主要作用：*</font>
+
+1. **防止长时间挂起**：当程序执行网络请求时，如果没有设置超时时间，网络操作可能会因为网络问题（如服务器无响应、网络堵塞等）而无限期地等待响应。`socket.setdefaulttimeout(20)` 能确保程序在 20 秒后停止等待，避免长时间挂起。
+2. **异常处理**：如果连接超时，程序会抛出 `socket.timeout` 异常，开发者可以捕获并处理这个异常，避免程序崩溃，或根据需要进行重试等操作。
+
+### 知识延展：
+
+#### 1. **超时设置的灵活性**：
+
+- `socket.setdefaulttimeout()` 设置的是**全局的默认超时时间**。所有通过 `urllib` 或 `httplib` 等使用 `socket` 进行的网络连接都将应用此超时设置。
+
+- 你也可以在具体的网络操作中手动设置超时。例如：
+
+  ```python
+  urllib.request.urlopen(url, timeout=10)
+  ```
+
+  这行代码会为单个`urloepn`请求设置超时为 10 秒，而不会影响其他网络请求的超时时间。
+
+#### 2. **超时的类型**：
+
+- **连接超时（Connection Timeout）**：指客户端与服务器建立连接的时间。如果在设定的时间内无法成功连接服务器，则会触发超时。
+- **读超时（Read Timeout）**：指客户端与服务器成功建立连接后，等待服务器响应数据的时间。如果在设定时间内服务器没有返回数据，则会触发超时。
+
+#### 3. **与重试机制的结合**：
+
+通常情况下，超时与网络请求的重试机制结合使用。当某次网络请求超时时，可以尝试重试以应对临时的网络问题。比如爬虫程序中，超时后可以重试下载图片，防止由于某个请求失败导致整个程序终止。
+
+#### 4. **默认超时 vs 无超时**：
+
+- 如果不设置 `socket.setdefaulttimeout()` 或 `timeout` 参数，网络库默认是**没有超时限制的**。这意味着网络请求可能会无限期挂起等待。
+- 设置合适的超时时间非常重要，特别是在构建爬虫、数据抓取工具或者其他需要大量网络请求的应用时。
+
+#### 5. **异常处理**：
+
+当设置了超时后，你可以通过捕获 `socket.timeout` 或 `urllib.error.URLError` 异常来处理超时问题：
+
+```python
+pythonCopy codetry:
+    response = urllib.request.urlopen(url, timeout=10)
+except urllib.error.URLError as e:
+    if isinstance(e.reason, socket.timeout):
+        print("连接超时")
+```
+
+### 延展示例
+
+假设我们在爬取网页时遇到不稳定的网络连接，超时设置可以与重试机制结合，避免因为一次超时导致整个程序停止。下面是一个简化的例子：
+
+```python
+pythonCopy codeimport urllib.request
+import socket
+
+socket.setdefaulttimeout(10)  # 全局超时设置为 10 秒
+
+def fetch_url(url, retries=3):
+    while retries > 0:
+        try:
+            response = urllib.request.urlopen(url)
+            return response.read()
+        except socket.timeout:
+            print(f"连接超时，剩余重试次数: {retries}")
+            retries -= 1
+            if retries == 0:
+                print("多次重试后仍然失败，停止请求。")
+                return None
+
+url = 'http://example.com'
+content = fetch_url(url)
+```
+
+在这个例子中，如果请求 `url` 时发生了超时，程序会重试最多 3 次。在超过重试次数后，程序放弃请求并返回 `None`。
+
+在最上面的爬取图片的代码中，我使用的是每一次访问图片链接的时候进行异常捕获，最多尝试三次，超过三次将会自动跳过本图片的下载。
+
+我们在自己书写爬虫代码的时候一定要注意异常捕获的操作，这在很大程度上可以提升我们代码的鲁棒性。
+
+# <font color = orange>Selenium</font>
+
+```python
+import time
+
+from selenium import webdriver
+
+# 这个By一定要手动导入，否则虽然可以直接使用，但是发生报错
+from selenium.webdriver.common.by import By
+
+url = 'https://www.baidu.com'
+
+driver = webdriver.Chrome()
+
+driver.get(url)
+
+driver.maximize_window()
+
+btn = driver.find_element(by=By.ID, value='kw')
+
+btn_search = driver.find_element(by=By.ID, value='su')
+
+# 获取标签的名称，而不是value
+# print(btn.tag_name)
+
+time.sleep(2)
+
+btn.send_keys('周杰伦')
+
+btn_search.click()
+
+# 尽量在每一个操作之后都休眠一段时间，否则会出现某些指令无法正常执行
+time.sleep(2)
+
+# 屏幕下滑
+to_end = 'document.documentElement.scrollTop=100000'
+driver.execute_script(to_end)
+
+time.sleep(2)
+
+btn_next_page = driver.find_element(by=By.CLASS_NAME, value='n')
+
+btn_next_page.click()
+
+time.sleep(2)
+
+driver.execute_script(to_end)
+
+time.sleep(2)
+
+driver.back()
+
+time.sleep(2)
+
+driver.forward()
+
+time.sleep(2)
+
+driver.quit()
+```
+
+这段代码的作用就是模拟浏览器，并且使用代码控制浏览器进行操作：
+
+向百度的搜索框中输入`周杰伦`，随后点击百度一下进行检索，到达页面后休眠两秒，滑动至页面底端，点击下一页，再从第二页滑动至页面的底端，再返回第一页，再返回第二页。	:joy:
+
+上面的代码会使得代码自己启动浏览器，但是这样子会导致反应速度很慢，因此这里就有了`handless chrome`的概念，大致意思就是同样会执行上面的操作，但是不会再桌面上显示出整个过程，通过下面一段代码来介绍则这个东西。
+
+```python
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+
+# chrome_options = webdriver.ChromeOptions()
+# chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--disable-gpu")
+#
+# browser = webdriver.Chrome(options=chrome_options)
+
+url = 'https://www.baidu.com'
+
+def share_browser():
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+
+    browser = webdriver.Chrome(options=chrome_options)
+    return browser
+
+my_b = share_browser()
+
+my_b.get(url)
+
+my_b.save_screenshot('screenshot.png')
+```
+
+上面代码的效果就是访问百度首页并且截取一张图片再退出，这张图片将保存在本地。
+
+如果按照一开始那种操作方式，这个过程我们是可以看到的，但是通过上面这段代码，我们就可以隐式的完成相关操作（用这种方式主要是运行效率更高）。
+
+上面的函数是将一个固定的内容进行了封装，我们在每次使用的时候将这个函数调用直接生成一个`browser`对象就可以直接使用了，这里封装起来就非常方便了。
+
+# <font color = orange>requests</font>
+
+```python
+import requests
+
+url = 'https://www.baidu.com'
+
+response = requests.get(url)
+
+# 一个类型：<class 'requests.models.Response'>
+# print(type(response))
+
+# 六个方法
+
+# 1. 获取网页的源码(字符串格式)
+# print(response.text)
+
+# 2. 访问或定制编码格式
+# response.encoding = 'utf-8'
+# print(response.text)
+
+# 3. 获取请求的url
+# print(response.url)
+
+# 4. 响应的字节类型,返回的是二进制的数据
+# print(response.content)
+
+# 5. 返回状态码 (200, 404, 502, ......)
+# print(response.status_code)
+
+# 6. 返回响应的头信息
+# print(response.headers)
+```
+
+## <font color = yellow>Get请求</font>
+
+```python
+import requests
+
+url = 'https://www.baidu.com'
+
+headers = {
+    'ua': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+}
+
+data = {
+    'wd': '周杰伦'
+}
+
+# def get(url, params=None, **kwargs):
+# url 请求资源的路径
+# params 参数
+# kwargs 字典，传入headers
+response = requests.get(url=url, params=data, headers=headers)
+
+response.encoding = 'utf-8'
+
+print(response.text)
+```
+
+## <font color = yellow>Post请求</font>
+
+```python
+import requests
+import json
+
+url = 'https://fanyi.baidu.com/sug'
+
+headers = {
+    'ua': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+}
+
+s = input('请输入单词......\n')
+
+data = {
+    'kw': str(s)
+}
+
+# def post(url, data=None, json=None, **kwargs):
+# json 不需要输入
+response = requests.post(url=url, headers=headers, data=data)
+
+obj = json.loads(response.text)
+
+list_word_translate = obj.get('data')
+
+for i in list_word_translate:
+    print(i)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
